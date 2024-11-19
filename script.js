@@ -1,6 +1,13 @@
+// Константы и конфигурация
 const HOUR_IN_MS = 60 * 60 * 1000;
 const MINUTE_IN_MS = 60 * 1000;
 const SECOND_IN_MS = 1000;
+const TIME_FORMAT = {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+};
 
 // Кэшируем DOM-элементы
 const elements = {
@@ -9,7 +16,10 @@ const elements = {
     hourNote: document.getElementById('hourNote'),
     clock: document.getElementById('clock'),
     initialLayout: document.getElementById('initialLayout'),
-    expiredLayout: document.getElementById('expiredLayout')
+    expiredLayout: document.getElementById('expiredLayout'),
+    timerInput: document.getElementById('timerInput'),
+    targetDateTime: document.getElementById('targetDateTime'),
+    eventNameInput: document.getElementById('eventNameInput')
 };
 
 // Проверяем наличие всех элементов
@@ -22,33 +32,48 @@ if (missingElements.length > 0) {
     throw new Error('Не удалось инициализировать приложение');
 }
 
-// Применяем начальные настройки
-elements.eventName.textContent = CONFIG.eventName;
+// Установка начального времени (текущее время + 1 час, секунды = 0)
+const now = new Date();
+const initialTargetDate = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    now.getHours() + 1,
+    now.getMinutes(),
+    0, // устанавливаем секунды в 0
+    0  // устанавливаем миллисекунды в 0
+);
 
-function parseRussianDate(dateStr) {
-    try {
-        const [datePart, timePart] = dateStr.split(' ');
-        const [day, month, year] = datePart.split('-');
-        const [hours, minutes, seconds] = timePart.split(':');
-        
-        const date = new Date(year, month - 1, day, hours, minutes, seconds);
-        
-        if (isNaN(date.getTime())) {
-            throw new Error('Некорректная дата');
-        }
-        
-        return date;
-    } catch (error) {
-        console.error(`Ошибка при разборе даты: ${dateStr}`, error);
-        throw error;
-    }
-}
-
-const targetDate = parseRussianDate(CONFIG.eventDate);
+let targetDate = initialTargetDate;
 let isExpired = false;
+let timerInterval;
+
+// Форматирование даты для input type="datetime-local"
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
 function formatTimeUnit(value) {
     return value.toString().padStart(2, '0');
+}
+
+function showTimerInput() {
+    // Устанавливаем в поле ввода текущее целевое время
+    elements.targetDateTime.value = formatDateForInput(targetDate);
+    elements.eventNameInput.value = elements.eventName.textContent;
+    
+    elements.timerInput.classList.add('visible');
+    elements.targetDateTime.focus();
+}
+
+function hideTimerInput() {
+    elements.timerInput.classList.remove('visible');
 }
 
 function updateTimer() {
@@ -86,12 +111,39 @@ function updateTimer() {
 function updateClock() {
     elements.clock.textContent = new Date().toLocaleTimeString(
         undefined,
-        CONFIG.timeFormat
+        TIME_FORMAT
     );
 }
 
-// Запуск таймера с правильной очисткой
-let timerInterval;
+function updateTargetTime() {
+    const newDateTime = elements.targetDateTime.value;
+    const newEventName = elements.eventNameInput.value;
+    
+    if (!newDateTime) {
+        alert('Пожалуйста, выберите дату и время');
+        return;
+    }
+
+    // Устанавливаем новое время с обнулением секунд
+    targetDate = new Date(newDateTime);
+    targetDate.setSeconds(0, 0); // устанавливаем секунды и миллисекунды в 0
+    
+    if (newEventName) {
+        elements.eventName.textContent = newEventName;
+    }
+
+    // Сброс состояния истекшего таймера
+    if (isExpired) {
+        isExpired = false;
+        elements.initialLayout.style.display = 'flex';
+        elements.expiredLayout.style.display = 'none';
+        document.body.classList.remove('expired');
+    }
+
+    hideTimerInput();
+    cleanupTimer();
+    startTimer();
+}
 
 function startTimer() {
     updateTimer();
@@ -104,6 +156,28 @@ function cleanupTimer() {
     }
 }
 
-// Запуск после загрузки DOM и очистка при выгрузке
+// Установка минимальной даты как текущая
+elements.targetDateTime.min = formatDateForInput(new Date());
+
+// Инициализация начальных значений
+elements.targetDateTime.value = formatDateForInput(targetDate);
+elements.eventNameInput.value = elements.eventName.textContent;
+
+// Обработчики событий
 document.addEventListener('DOMContentLoaded', startTimer);
 window.addEventListener('unload', cleanupTimer);
+
+// Клик по таймеру или часам открывает форму ввода
+elements.countdown.addEventListener('click', showTimerInput);
+elements.hourNote.addEventListener('click', showTimerInput);
+elements.clock.addEventListener('click', showTimerInput);
+
+// Закрытие формы по клику вне её
+document.addEventListener('click', (e) => {
+    if (!elements.timerInput.contains(e.target) && 
+        !elements.countdown.contains(e.target) && 
+        !elements.hourNote.contains(e.target) && 
+        !elements.clock.contains(e.target)) {
+        hideTimerInput();
+    }
+});

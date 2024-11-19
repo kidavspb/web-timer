@@ -1,30 +1,38 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Countdown Timer</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="timerInput" class="timer-input">
+        <input type="datetime-local" id="targetDateTime">
+        <input type="text" id="eventNameInput" placeholder="Название события">
+        <button onclick="updateTargetTime()">Установить</button>
+    </div>
+
     <div class="container">
-        <div class="initial-layout" id="initialLayout">
-            <img src="logos/mg-logo-color.svg" alt="MG Logo" class="logo">
+        <div id="initialLayout" class="initial-layout">
+            <img src="logo-color.svg" alt="Logo" class="logo">
             <div class="timer-section">
-                <div class="event-name" id="eventName">До начала собрания</div>
+                <div id="eventName" class="event-name">До начала собрания</div>
                 <div class="countdown">
-                    <div id="hourNote" class="more-than-hour" style="display: none">больше часа</div>
-                    <div id="countdown">00:00</div>
+                    <div id="hourNote" class="more-than-hour" style="display: none">
+                        больше часа
+                    </div>
+                    <div id="countdown">
+                        00:00
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="expired-layout" id="expiredLayout">
-            <img src="logos/mg-logo-color.svg" alt="MG Logo" class="logo">
-            <div class="clock" id="clock"></div>
+        <div id="expiredLayout" class="expired-layout">
+            <img src="logo-color.svg" alt="Logo" class="logo">
+            <div id="clock" class="clock"></div>
         </div>
     </div>
-    <script src="config.js"></script>
+
     <script src="script.js"></script>
 </body>
 </html>
