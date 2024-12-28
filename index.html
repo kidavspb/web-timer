@@ -6,12 +6,20 @@
 </head>
 <body>
     <div id="timerInput" class="timer-input">
-        <input type="datetime-local" id="targetDateTime">
-        <input type="text" id="eventNameInput" placeholder="Название события">
-        <label class="sound-toggle">
-            <input type="checkbox" id="soundEnabled">
-            <span>Со звуком</span>
-        </label>
+        <div class="timer-inputs">
+            <input type="text" id="eventNameInput" placeholder="Название события" class="event-input">
+            <input type="datetime-local" id="targetDateTime" class="datetime-input">
+        </div>
+        <div class="settings-group">
+            <label class="setting-toggle">
+                <input type="checkbox" id="videoEnabled" checked>
+                <span>С видео</span>
+            </label>
+            <label class="setting-toggle" id="soundToggle">
+                <input type="checkbox" id="soundEnabled">
+                <span>Со звуком</span>
+            </label>
+        </div>
         <button onclick="updateTargetTime()">Установить</button>
     </div>
 

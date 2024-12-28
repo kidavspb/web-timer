@@ -26,7 +26,9 @@ const elements = {
     targetDateTime: document.getElementById('targetDateTime'),
     eventNameInput: document.getElementById('eventNameInput'),
     soundEnabled: document.getElementById('soundEnabled'),
-    safariSoundButton: document.getElementById('safariSoundButton')
+    safariSoundButton: document.getElementById('safariSoundButton'),
+    videoEnabled: document.getElementById('videoEnabled'),
+    soundToggle: document.getElementById('soundToggle')
 };
 
 // Проверяем наличие всех элементов
@@ -85,6 +87,22 @@ function preloadVideo() {
     });
 }
 
+// Функция для обновления состояния звука
+function updateSoundToggleState() {
+    if (elements.videoEnabled.checked) {
+        elements.soundToggle.classList.add('enabled');
+    } else {
+        elements.soundToggle.classList.remove('enabled');
+        elements.soundEnabled.checked = false;
+    }
+}
+
+// Обработчик изменения состояния видео
+elements.videoEnabled.addEventListener('change', () => {
+    localStorage.setItem('videoEnabled', elements.videoEnabled.checked);
+    updateSoundToggleState();
+});
+
 // Форматирование даты для input type="datetime-local"
 function formatDateForInput(date) {
     const year = date.getFullYear();
@@ -103,7 +121,7 @@ function formatTimeUnit(value) {
 function showTimerInput() {
     elements.targetDateTime.value = formatDateForInput(targetDate);
     elements.eventNameInput.value = elements.eventName.textContent;
-    
+    updateSoundToggleState();
     elements.timerInput.classList.add('visible');
     elements.targetDateTime.focus();
 }
@@ -137,43 +155,38 @@ function updateTimer() {
     if (distance <= 0) {
         if (!isExpired) {
             isExpired = true;
-            console.log('Таймер истёк, показываем видео');
-            
+    
+            // Скрываем начальный экран
             elements.initialLayout.style.display = 'none';
-            elements.videoLayout.style.display = 'block';
-            elements.expirationVideo.style.display = 'block';
-            
-            // Если видео еще не предзагружено, загружаем его
-            const playVideo = isVideoPreloaded 
-                ? Promise.resolve() 
-                : preloadVideo();
-            
-            // Создаем promise для отслеживания окончания видео
-            const videoEndPromise = new Promise((resolve) => {
-                elements.expirationVideo.addEventListener('ended', resolve, { once: true });
-            });
-
-            // Начинаем воспроизведение
-            playVideo
-                .then(() => startPlayback())
-                .then(() => videoEndPromise)
-                .then(() => {
-                    console.log('Видео закончилось, показываем часы');
-                    elements.videoLayout.style.display = 'none';
-                    elements.expiredLayout.style.display = 'flex';
-                    document.body.classList.add('expired');
-                    updateClock();
-                    setInterval(updateClock, 1000);
-                })
-                .catch(error => {
-                    console.error('Критическая ошибка при работе с видео:', error);
-                    // В случае ошибки все равно показываем часы
-                    elements.videoLayout.style.display = 'none';
-                    elements.expiredLayout.style.display = 'flex';
-                    document.body.classList.add('expired');
-                    updateClock();
-                    setInterval(updateClock, 1000);
+    
+            if (elements.videoEnabled.checked) {
+                console.log('Показываем видео');
+                elements.videoLayout.style.display = 'block';
+                elements.expirationVideo.style.display = 'block';
+                
+                // Если видео еще не предзагружено, загружаем его
+                const playVideo = isVideoPreloaded 
+                    ? Promise.resolve() 
+                    : preloadVideo();
+                
+                // Создаем promise для отслеживания окончания видео
+                const videoEndPromise = new Promise((resolve) => {
+                    elements.expirationVideo.addEventListener('ended', resolve, { once: true });
                 });
+    
+                // Начинаем воспроизведение
+                playVideo
+                    .then(() => startPlayback())
+                    .then(() => videoEndPromise)
+                    .then(showExpiredScreen)
+                    .catch(error => {
+                        console.error('Критическая ошибка при работе с видео:', error);
+                        showExpiredScreen();
+                    });
+            } else {
+                // Если видео отключено, сразу показываем экран с часами
+                showExpiredScreen();
+            }
         }
         return;
     }
@@ -206,6 +219,20 @@ function handleEnterKey(e) {
         updateTargetTime();
     }
 }
+
+// Добавляем функцию для показа экрана с часами
+function showExpiredScreen() {
+    elements.videoLayout.style.display = 'none';
+    elements.expiredLayout.style.display = 'flex';
+    document.body.classList.add('expired');
+    updateClock();
+    setInterval(updateClock, 1000);
+}
+
+// Сохранение настроек в localStorage
+elements.videoEnabled.addEventListener('change', () => {
+    localStorage.setItem('videoEnabled', elements.videoEnabled.checked);
+});
 
 function updateTargetTime() {
     const newDateTime = elements.targetDateTime.value;
@@ -287,17 +314,26 @@ elements.targetDateTime.min = formatDateForInput(new Date());
 elements.targetDateTime.value = formatDateForInput(targetDate);
 elements.eventNameInput.value = elements.eventName.textContent;
 
-// Загружаем сохранённое состояние звука
+// Загрузка настроек при старте
+// В DOMContentLoaded добавляем:
 document.addEventListener('DOMContentLoaded', () => {
+    const savedVideoState = localStorage.getItem('videoEnabled');
+    if (savedVideoState !== null) {
+        elements.videoEnabled.checked = savedVideoState === 'true';
+    }
+
     const savedSoundState = localStorage.getItem('soundEnabled');
     if (savedSoundState !== null) {
         elements.soundEnabled.checked = savedSoundState === 'true';
     }
+
+    updateSoundToggleState();
     
-    // Начинаем предзагрузку видео
-    preloadVideo().catch(error => {
-        console.error('Не удалось предзагрузить видео:', error);
-    });
+    if (elements.videoEnabled.checked) {
+        preloadVideo().catch(error => {
+            console.error('Не удалось предзагрузить видео:', error);
+        });
+    }
 });
 
 // Обработчики событий
