@@ -8,6 +8,10 @@
     <div id="timerInput" class="timer-input">
         <input type="datetime-local" id="targetDateTime">
         <input type="text" id="eventNameInput" placeholder="Название события">
+        <label class="sound-toggle">
+            <input type="checkbox" id="soundEnabled">
+            <span>Со звуком</span>
+        </label>
         <button onclick="updateTargetTime()">Установить</button>
     </div>
 
@@ -25,6 +29,16 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="videoLayout" class="video-layout">
+            <video id="expirationVideo" muted preload="auto">
+                <source src="video.mp4" type="video/mp4">
+                Ваш браузер не поддерживает видео
+            </video>
+            <button id="safariSoundButton" class="safari-sound-button">
+                Включить звук
+            </button>
         </div>
 
         <div id="expiredLayout" class="expired-layout">

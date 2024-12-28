@@ -90,6 +90,54 @@ body.expired {
     opacity: 0.8;
 }
 
+.video-layout {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.video-layout video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    display: block !important;
+    margin: 0;
+    padding: 0;
+}
+
+.safari-sound-button {
+    display: none;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+    z-index: 1001;
+}
+
+.safari-sound-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.safari-sound-button.visible {
+    display: block;
+}
+
 .expired-layout {
     display: none;
     width: 100%;
@@ -125,7 +173,6 @@ body.expired {
     opacity: 0.8;
 }
 
-/* Стили для формы ввода */
 .timer-input {
     position: fixed;
     top: 20px;
@@ -171,6 +218,18 @@ body.expired {
     background: #0056b3;
 }
 
+.sound-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.sound-toggle input[type="checkbox"] {
+    cursor: pointer;
+}
+
 @media (max-width: 900px) {
     .initial-layout {
         flex-direction: column;
@@ -199,5 +258,10 @@ body.expired {
 
     .timer-input input {
         width: 100%;
+    }
+
+    .sound-toggle {
+        width: 100%;
+        padding: 8px 0;
     }
 }
