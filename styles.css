@@ -107,7 +107,7 @@ body.expired {
 .video-layout video {
     width: 100vw;
     height: 100vh;
-    object-fit: contain;
+    object-fit: cover;
     display: block !important;
     margin: 0;
     padding: 0;
